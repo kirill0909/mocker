@@ -37,14 +37,17 @@ func main() {
 	mockerRepo := repository.NewMockerPGRepo(cfg, pgDB)
 	mockerUC := usecase.NewMockerUC(cfg, mockerRepo)
 
+	exitCh := make(chan os.Signal)
 	go func() {
 		if err := mockerUC.Mock(ctx); err != nil {
 			log.Println(err)
 		}
+		exitCh <- os.Interrupt
 	}()
 
-	exitCh := make(chan os.Signal)
 	signal.Notify(exitCh, os.Interrupt, syscall.SIGINT)
 	<-exitCh
+
+	log.Println("Mocking is commplited")
 
 }

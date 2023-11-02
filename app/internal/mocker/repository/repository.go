@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"mocker/config"
@@ -57,7 +58,7 @@ func (r *MockerPGRepo) GetColumns(ctx context.Context, tableName string) ([]mode
 	var column models.ColumnData
 	for rows.Next() {
 		if err = rows.Scan(&column.Name, &column.Type); err != nil {
-			err = errors.Wrapf(err, "MockerPGRepo.GetColumns.Scan(%s)", column)
+			err = errors.Wrapf(err, "MockerPGRepo.GetColumns.Scan(%v)", column)
 			return []models.ColumnData{}, err
 		}
 
@@ -70,4 +71,22 @@ func (r *MockerPGRepo) GetColumns(ctx context.Context, tableName string) ([]mode
 	}
 
 	return columns, nil
+}
+
+func (r *MockerPGRepo) Mock(ctx context.Context, query string) error {
+	_, err := r.db.ExecContext(ctx, query)
+	if err != nil {
+		return errors.Wrap(err, "MockerPGRepo.Mock")
+	}
+
+	return nil
+}
+
+func (r *MockerPGRepo) GetRowsNum(ctx context.Context, tableName string) (int, error) {
+	var result int
+	if err := r.db.GetContext(ctx, &result, fmt.Sprintf(queryGetRowsNum, tableName)); err != nil {
+		return 0, errors.Wrapf(err, "MockerPGRepo.GetRowsNum.queryGetRowsNum. TableName: %s", tableName)
+	}
+
+	return result, nil
 }
