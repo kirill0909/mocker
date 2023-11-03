@@ -50,15 +50,19 @@ func (u *MockerUC) Mock(ctx context.Context) error {
 				// 	log.Printf("Updated: Table: %s.%s Column: %s", table.SchemaName, table.Name, column.Name)
 				// }(table, column)
 			case "integer", "bigint", "smallint", "numeric":
+				// wg.Add(1)
+				// go func(table models.TableData, column models.ColumnData) {
+				// 	defer wg.Done()
+				// 	u.handleIntegerCase(ctx, table, column)
+				// 	log.Printf("Updated: Table: %s.%s Column: %s", table.SchemaName, table.Name, column.Name)
+				// }(table, column)
+			case "timestamp with time zone", "timestamp without time zone":
 				wg.Add(1)
 				go func(table models.TableData, column models.ColumnData) {
 					defer wg.Done()
-					u.handleIntegerCase(ctx, table, column)
+					u.handleTimeCase(ctx, table, column)
 					log.Printf("Updated: Table: %s.%s Column: %s", table.SchemaName, table.Name, column.Name)
 				}(table, column)
-				// log.Println(column)
-			case "timestamp with time zone", "timestamp without time zone":
-				// log.Println(column)
 			case "boolean":
 				// log.Println(column)
 			case "jsonb":
@@ -72,6 +76,13 @@ func (u *MockerUC) Mock(ctx context.Context) error {
 	wg.Wait()
 
 	return nil
+}
+
+func (u *MockerUC) handleTimeCase(ctx context.Context, table models.TableData, column models.ColumnData) {
+	query := fmt.Sprintf("UPDATE %s.%s SET %s = NOW()", table.SchemaName, table.Name, column.Name)
+	if err := u.pgRepo.Mock(ctx, query); err != nil {
+		log.Println(err)
+	}
 }
 
 func (u *MockerUC) handleIntegerCase(ctx context.Context, table models.TableData, column models.ColumnData) {
