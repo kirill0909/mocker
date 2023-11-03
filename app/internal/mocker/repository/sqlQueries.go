@@ -12,7 +12,7 @@ const (
 	//  WHERE table_schema NOT IN ('information_schema', 'pg_catalog');`
 
 	queryGetColumns = `
-  SELECT column_name, data_type FROM information_schema.columns WHERE table_name=$1
+	 SELECT column_name, data_type FROM information_schema.columns WHERE table_name=$1
 	`
 
 	queryGetRowsNum = `

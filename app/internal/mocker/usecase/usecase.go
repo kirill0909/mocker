@@ -7,8 +7,8 @@ import (
 	"mocker/config"
 	"mocker/internal/mocker"
 	"mocker/internal/models"
-	"mocker/pkg/utils"
 	"strings"
+	"sync"
 )
 
 type MockerUC struct {
@@ -25,30 +25,34 @@ func (u *MockerUC) Mock(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	log.Println(tables)
 
+	wg := sync.WaitGroup{}
 	for _, table := range tables {
 		columns, err := u.pgRepo.GetColumns(ctx, table.Name)
 		if err != nil {
 			return err
 		}
 
-		// var query string
 		for _, column := range columns {
 			switch column.Type {
 			case "uuid":
-				u.handleUUIDCase(ctx, table, column)
-				log.Println("Update ", table, column)
+				wg.Add(1)
+				go func(table models.TableData, column models.ColumnData) {
+					defer wg.Done()
+					u.handleUUIDCase(ctx, table, column)
+					log.Printf("Updated: Table: %s.%s Column: %s", table.SchemaName, table.Name, column.Name)
+				}(table, column)
 			case "text":
+				// wg.Add(1)
+				// go func(table models.TableData, column models.ColumnData) {
+				// 	defer wg.Done()
+				// 	u.handleTextCase(ctx, table, column)
+				// 	log.Printf("Updated: Table: %s.%s Column: %s", table.SchemaName, table.Name, column.Name)
+				// }(table, column)
+			case "integer", "bigint", "smallint", "numeric":
 				// log.Println(column)
-			case "integer":
-				// log.Println(column)
-			case "bigint":
-				// log.Println(column)
-			case "timestamp with time zone":
-				// log.Println(column)
-			case "timestamp without time zone":
-				// log.Println(column)
-			case "numeric":
+			case "timestamp with time zone", "timestamp without time zone":
 				// log.Println(column)
 			case "boolean":
 				// log.Println(column)
@@ -60,7 +64,16 @@ func (u *MockerUC) Mock(ctx context.Context) error {
 		}
 	}
 
+	wg.Wait()
+
 	return nil
+}
+
+func (u *MockerUC) handleTextCase(ctx context.Context, table models.TableData, column models.ColumnData) {
+	query := fmt.Sprintf("UPDATE %s.%s SET %s = 'My Best Mock'", table.SchemaName, table.Name, column.Name)
+	if err := u.pgRepo.Mock(ctx, query); err != nil {
+		log.Println(err)
+	}
 }
 
 func (u *MockerUC) handleUUIDCase(ctx context.Context, table models.TableData, column models.ColumnData) {
@@ -70,7 +83,7 @@ func (u *MockerUC) handleUUIDCase(ctx context.Context, table models.TableData, c
 	}
 
 	for i := 0; i < rowsNum; i++ {
-		query := fmt.Sprintf("UPDATE %s.%s SET %s = '%s'::UUID", table.SchemaName, table.Name, column.Name, utils.GetRandomUUID())
+		query := fmt.Sprintf("UPDATE %s.%s SET %s = gen_random_uuid()", table.SchemaName, table.Name, column.Name)
 		err = u.pgRepo.Mock(ctx, query)
 		if err != nil && strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
 			continue
