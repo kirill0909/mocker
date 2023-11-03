@@ -36,40 +36,40 @@ func (u *MockerUC) Mock(ctx context.Context) error {
 		for _, column := range columns {
 			switch column.Type {
 			case "uuid":
-				// wg.Add(1)
-				// go func(table models.TableData, column models.ColumnData) {
-				// 	defer wg.Done()
-				// 	u.handleUUIDCase(ctx, table, column)
-				// 	log.Printf("Updated: Table: %s.%s Column: %s", table.SchemaName, table.Name, column.Name)
-				// }(table, column)
+				wg.Add(1)
+				go func(table models.TableData, column models.ColumnData) {
+					defer wg.Done()
+					u.handleUUIDCase(ctx, table, column)
+					log.Printf("Updated: Table: %s.%s Column: %s", table.SchemaName, table.Name, column.Name)
+				}(table, column)
 			case "text":
-				// wg.Add(1)
-				// go func(table models.TableData, column models.ColumnData) {
-				// 	defer wg.Done()
-				// 	u.handleTextCase(ctx, table, column)
-				// 	log.Printf("Updated: Table: %s.%s Column: %s", table.SchemaName, table.Name, column.Name)
-				// }(table, column)
+				wg.Add(1)
+				go func(table models.TableData, column models.ColumnData) {
+					defer wg.Done()
+					u.handleTextCase(ctx, table, column)
+					log.Printf("Updated: Table: %s.%s Column: %s", table.SchemaName, table.Name, column.Name)
+				}(table, column)
 			case "integer", "bigint", "smallint", "numeric":
-				// wg.Add(1)
-				// go func(table models.TableData, column models.ColumnData) {
-				// 	defer wg.Done()
-				// 	u.handleIntegerCase(ctx, table, column)
-				// 	log.Printf("Updated: Table: %s.%s Column: %s", table.SchemaName, table.Name, column.Name)
-				// }(table, column)
+				wg.Add(1)
+				go func(table models.TableData, column models.ColumnData) {
+					defer wg.Done()
+					u.handleIntegerCase(ctx, table, column)
+					log.Printf("Updated: Table: %s.%s Column: %s", table.SchemaName, table.Name, column.Name)
+				}(table, column)
 			case "timestamp with time zone", "timestamp without time zone":
-				// wg.Add(1)
-				// go func(table models.TableData, column models.ColumnData) {
-				// 	defer wg.Done()
-				// 	u.handleTimeCase(ctx, table, column)
-				// 	log.Printf("Updated: Table: %s.%s Column: %s", table.SchemaName, table.Name, column.Name)
-				// }(table, column)
+				wg.Add(1)
+				go func(table models.TableData, column models.ColumnData) {
+					defer wg.Done()
+					u.handleTimeCase(ctx, table, column)
+					log.Printf("Updated: Table: %s.%s Column: %s", table.SchemaName, table.Name, column.Name)
+				}(table, column)
 			case "boolean":
-				// wg.Add(1)
-				// go func(table models.TableData, column models.ColumnData) {
-				// 	defer wg.Done()
-				// 	u.handleBooleanCase(ctx, table, column)
-				// 	log.Printf("Updated: Table: %s.%s Column: %s", table.SchemaName, table.Name, column.Name)
-				// }(table, column)
+				wg.Add(1)
+				go func(table models.TableData, column models.ColumnData) {
+					defer wg.Done()
+					u.handleBooleanCase(ctx, table, column)
+					log.Printf("Updated: Table: %s.%s Column: %s", table.SchemaName, table.Name, column.Name)
+				}(table, column)
 			case "jsonb":
 				wg.Add(1)
 				go func(table models.TableData, column models.ColumnData) {
@@ -77,8 +77,6 @@ func (u *MockerUC) Mock(ctx context.Context) error {
 					u.handleJsonbCase(ctx, table, column)
 					log.Printf("Updated: Table: %s.%s Column: %s", table.SchemaName, table.Name, column.Name)
 				}(table, column)
-			case "ARRAY":
-				// log.Println(column)
 			}
 		}
 	}
