@@ -64,15 +64,19 @@ func (u *MockerUC) Mock(ctx context.Context) error {
 				// 	log.Printf("Updated: Table: %s.%s Column: %s", table.SchemaName, table.Name, column.Name)
 				// }(table, column)
 			case "boolean":
+				// wg.Add(1)
+				// go func(table models.TableData, column models.ColumnData) {
+				// 	defer wg.Done()
+				// 	u.handleBooleanCase(ctx, table, column)
+				// 	log.Printf("Updated: Table: %s.%s Column: %s", table.SchemaName, table.Name, column.Name)
+				// }(table, column)
+			case "jsonb":
 				wg.Add(1)
 				go func(table models.TableData, column models.ColumnData) {
 					defer wg.Done()
-					u.handleBooleanCase(ctx, table, column)
+					u.handleJsonbCase(ctx, table, column)
 					log.Printf("Updated: Table: %s.%s Column: %s", table.SchemaName, table.Name, column.Name)
 				}(table, column)
-				// log.Println(column)
-			case "jsonb":
-				// log.Println(column)
 			case "ARRAY":
 				// log.Println(column)
 			}
@@ -82,6 +86,13 @@ func (u *MockerUC) Mock(ctx context.Context) error {
 	wg.Wait()
 
 	return nil
+}
+
+func (u *MockerUC) handleJsonbCase(ctx context.Context, table models.TableData, column models.ColumnData) {
+	query := fmt.Sprintf(`UPDATE %s.%s SET %s = '{"mock":"mock"}'`, table.SchemaName, table.Name, column.Name)
+	if err := u.pgRepo.Mock(ctx, query); err != nil {
+		log.Println(err)
+	}
 }
 
 func (u *MockerUC) handleBooleanCase(ctx context.Context, table models.TableData, column models.ColumnData) {
