@@ -50,6 +50,12 @@ func (u *MockerUC) Mock(ctx context.Context) error {
 				// 	log.Printf("Updated: Table: %s.%s Column: %s", table.SchemaName, table.Name, column.Name)
 				// }(table, column)
 			case "integer", "bigint", "smallint", "numeric":
+				wg.Add(1)
+				go func(table models.TableData, column models.ColumnData) {
+					defer wg.Done()
+					u.handleIntegerCase(ctx, table, column)
+					log.Printf("Updated: Table: %s.%s Column: %s", table.SchemaName, table.Name, column.Name)
+				}(table, column)
 				// log.Println(column)
 			case "timestamp with time zone", "timestamp without time zone":
 				// log.Println(column)
@@ -69,7 +75,10 @@ func (u *MockerUC) Mock(ctx context.Context) error {
 }
 
 func (u *MockerUC) handleIntegerCase(ctx context.Context, table models.TableData, column models.ColumnData) {
-	// query := fmt.Sprintf()
+	query := fmt.Sprintf("UPDATE %s.%s SET %s = floor(random() * 100 + 1)::int", table.SchemaName, table.Name, column.Name)
+	if err := u.pgRepo.Mock(ctx, query); err != nil {
+		// log.Println(err)
+	}
 }
 
 func (u *MockerUC) handleTextCase(ctx context.Context, table models.TableData, column models.ColumnData) {
