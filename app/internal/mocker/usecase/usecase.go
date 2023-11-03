@@ -7,7 +7,6 @@ import (
 	"mocker/config"
 	"mocker/internal/mocker"
 	"mocker/internal/models"
-	"strings"
 	"sync"
 )
 
@@ -37,12 +36,12 @@ func (u *MockerUC) Mock(ctx context.Context) error {
 		for _, column := range columns {
 			switch column.Type {
 			case "uuid":
-				wg.Add(1)
-				go func(table models.TableData, column models.ColumnData) {
-					defer wg.Done()
-					u.handleUUIDCase(ctx, table, column)
-					log.Printf("Updated: Table: %s.%s Column: %s", table.SchemaName, table.Name, column.Name)
-				}(table, column)
+				// wg.Add(1)
+				// go func(table models.TableData, column models.ColumnData) {
+				// 	defer wg.Done()
+				// 	u.handleUUIDCase(ctx, table, column)
+				// 	log.Printf("Updated: Table: %s.%s Column: %s", table.SchemaName, table.Name, column.Name)
+				// }(table, column)
 			case "text":
 				// wg.Add(1)
 				// go func(table models.TableData, column models.ColumnData) {
@@ -69,6 +68,10 @@ func (u *MockerUC) Mock(ctx context.Context) error {
 	return nil
 }
 
+func (u *MockerUC) handleIntegerCase(ctx context.Context, table models.TableData, column models.ColumnData) {
+	// query := fmt.Sprintf()
+}
+
 func (u *MockerUC) handleTextCase(ctx context.Context, table models.TableData, column models.ColumnData) {
 	query := fmt.Sprintf("UPDATE %s.%s SET %s = 'My Best Mock'", table.SchemaName, table.Name, column.Name)
 	if err := u.pgRepo.Mock(ctx, query); err != nil {
@@ -77,16 +80,9 @@ func (u *MockerUC) handleTextCase(ctx context.Context, table models.TableData, c
 }
 
 func (u *MockerUC) handleUUIDCase(ctx context.Context, table models.TableData, column models.ColumnData) {
-	rowsNum, err := u.pgRepo.GetRowsNum(ctx, fmt.Sprintf("%s.%s", table.SchemaName, table.Name))
+	query := fmt.Sprintf("UPDATE %s.%s SET %s = gen_random_uuid()", table.SchemaName, table.Name, column.Name)
+	err := u.pgRepo.Mock(ctx, query)
 	if err != nil {
 		log.Println(err)
-	}
-
-	for i := 0; i < rowsNum; i++ {
-		query := fmt.Sprintf("UPDATE %s.%s SET %s = gen_random_uuid()", table.SchemaName, table.Name, column.Name)
-		err = u.pgRepo.Mock(ctx, query)
-		if err != nil && strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
-			continue
-		}
 	}
 }
